@@ -1,5 +1,4 @@
 import pygame
-
 from OpenGL.GL import *
 
 pygame.init()
@@ -21,7 +20,6 @@ def pixel(x,y,color):
     glClear(GL_COLOR_BUFFER_BIT)
     glDisable(GL_SCISSOR_TEST)
 
-
 speedx = 1
 speedy = 1
 speedx1 = 1
@@ -29,7 +27,7 @@ speedy1 = 1
 running = True
 while running:
     #clean
-    glClearColor(0.1,0.8,0.2,1.0)
+    glClearColor(0.1,0.1,0.1,1.0)
     glClear(GL_COLOR_BUFFER_BIT)
 
     #paint
@@ -74,8 +72,6 @@ while running:
         else:
             speedy = 1
             speedy1 = -1
-
-  
 
     #flip 
     pygame.display.flip()
