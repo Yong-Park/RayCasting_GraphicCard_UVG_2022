@@ -1,5 +1,4 @@
 import pygame
-import random
 from math import *
 
 BLACK = (0,0,0)
@@ -7,6 +6,8 @@ WHITE = (255,255,255)
 
 SKY = (40,100,200)
 GROUND = (200,200,100)
+
+TRANSPARENT = (152,0,136,255)
 
 colors = [
     (0,20,10),
@@ -24,6 +25,26 @@ walls = {
     '5': pygame.image.load('./wall5.png'),
 }
 
+sprite1= pygame.image.load('./sprite1.png')
+sprite2= pygame.image.load('./sprite2.png')
+sprite3= pygame.image.load('./sprite3.png')
+sprite4= pygame.image.load('./sprite4.png')
+
+enemies = [
+    {
+        'x':100,
+        'y':150,
+        'sprite': sprite1,
+    },
+    {
+        'x':300,
+        'y':300,
+        'sprite': sprite2,
+    },
+]
+    
+
+
 class Raycaster(object):
     def __init__(self, screen):
         self.screen = screen
@@ -36,6 +57,10 @@ class Raycaster(object):
             'fov': int(pi/3),
             'a': int(pi/3),
         }
+        self.clearZ()
+
+    def clearZ(self):
+        self.zbuffer = [9999 for z in range(0,self.width)]
 
     def point(self, x, y, c=WHITE):
         self.screen.set_at((x,y),c)
@@ -100,7 +125,32 @@ class Raycaster(object):
     
     def draw_player(self):
         self.point(self.player['x'],self.player['y'])
-    
+
+    def draw_sprite(self,sprite):
+        sprite_a = atan2(sprite['y'] - self.player['y'],sprite['x'] - self.player['x'],)
+        
+        d = ((self.player['x']-sprite['x'])**2 + (self.player['y'] - sprite['y'])**2)**0.5
+
+        sprite_size = int(500/d * (500/10))
+
+        sprite_x = int(
+            500 + #offset del mapa
+            (sprite_a - self.player['a']) * 500/ self.player['fov'] 
+            + sprite_size/2
+        )
+        sprite_y = int(500/2 - sprite_size/2)
+        
+        for x in range(sprite_x,sprite_x+sprite_size):
+            for y in range(sprite_y,sprite_y+sprite_size):
+                tx = int((x - sprite_x) * 128/sprite_size)
+                ty = int((y-sprite_y) * 128/sprite_size)
+                c = sprite['sprite'].get_at((tx,ty))
+                if c != TRANSPARENT:
+                    if x> 500:
+                        if self.zbuffer[x-500] >= d:
+                            self.point(x,y,c)
+                            self.zbuffer[x - 500] = d
+
     def render(self):
         self.draw_map()
         self.draw_player()
@@ -125,8 +175,13 @@ class Raycaster(object):
             #con este se controla la profundiadd en la que se pueden llegar a ver las cosas
             h = self.heihgt/(d * cos(a - self.player['a'])) * self.heihgt /10
 
+            if self.zbuffer[i] >= d:
+                self.draw_stake(x,h,c,tx)
+                self.zbuffer[i] = d
         
-            self.draw_stake(x,h,c,tx)
+
+        for enemy in enemies:
+            self.draw_sprite(enemy)
 
 
 pygame.init()
@@ -140,6 +195,7 @@ while running:
     screen.fill(SKY,(r.width/2,0,r.width,r.heihgt/2))
     screen.fill(GROUND, (r.width/2,r.heihgt/2,r.width,r.heihgt/2))
     r.render()
+    r.clearZ()
 
     pygame.display.flip()
 
