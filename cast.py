@@ -169,15 +169,16 @@ class Raycaster(object):
         #draw in 3d
         for i in range(0,int(self.width/2)):
             a = self.player['a'] - self.player['fov']/2 + self.player['fov'] * i/(self.width/2)
-            d,c,tx = self.cast_ray(a)
+            self.d,c,tx = self.cast_ray(a)
 
             x = int(self.width/2) + i
             #con este se controla la profundiadd en la que se pueden llegar a ver las cosas
-            h = self.heihgt/(d * cos(a - self.player['a'])) * self.heihgt /10
+            if self.d > 0:
+                h = self.heihgt/(self.d * cos(a - self.player['a'])) * self.heihgt /10
 
-            if self.zbuffer[i] >= d:
-                self.draw_stake(x,h,c,tx)
-                self.zbuffer[i] = d
+                if self.zbuffer[i] >= self.d:
+                    self.draw_stake(x,h,c,tx)
+                    self.zbuffer[i] = self.d
         
 
         for enemy in enemies:
@@ -188,6 +189,7 @@ pygame.init()
 screen = pygame.display.set_mode((1000,500))
 r = Raycaster(screen)
 r.load_map('./map.txt')
+last_action = ''
 
 running = True
 while running:
@@ -199,6 +201,16 @@ while running:
 
     pygame.display.flip()
 
+    if r.d == 0:
+        if last_action == 'right':
+            r.player['x'] -= 10 
+        elif last_action == 'left':
+            r.player['x'] += 10 
+        elif last_action =='up':
+            r.player['y'] += 10
+        elif last_action =='down':
+            r.player['y'] -= 10
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running= False
@@ -208,12 +220,16 @@ while running:
                 r.player['a'] -= pi/10
             if event.key == pygame.K_d:
                 r.player['a'] += pi/10
-
+            
             if event.key == pygame.K_RIGHT:
-                r.player['x'] += 10
+                r.player['x'] += 10 
+                last_action='right'
             if event.key == pygame.K_LEFT:
                 r.player['x'] -= 10
+                last_action='left'
             if event.key == pygame.K_UP:
                 r.player['y'] -= 10
+                last_action='up'
             if event.key == pygame.K_DOWN:
                 r.player['y'] += 10
+                last_action='down'
